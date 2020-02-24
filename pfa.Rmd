@@ -1,0 +1,296 @@
+---
+title: "Projet fin d'année"
+author: "Drissi Jehan & Sdiri Dorsaf"
+date: "28 avril 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##Resumé :
+
+Nous disposons d'un jeu de données de 8 biscuits 4 fabriqués en Pakistan et 4 en France. Une evaluation sensorielle a été organisée pour caractèriser ce produit.
+Un jury de 12 experts (entrainé) a evalué chacun de ces produits lors de 2 seances de dégustation et sur une liste de 23 descripteurs sensoriels.
+Les notes varient entre 0 et 10. 0:extremement faible et 10:extremement fort.
+
+##Exploration des données 
+```{r}
+data=read.table(file=file.choose(),header=T,sep=";",dec=".")
+head(data)
+dim(data)
+data$seance=as.factor(data$seance)
+data$juge=as.factor(data$juge)
+str(data)
+summary(data)
+attach(data)
+```
+
+##statistique descriptive:
+##*Les variables quantitative:*
+####Mode: 
+C'est valeur correspondant a l'effectif le plus elevÃ©
+
+```{r}
+names(which.max(table(Ocitron)))
+names(which.max(table(Gcitron)))
+names(which.max(table(Tcraqcroust)))
+names(which.max(table(Obeurre)))
+
+```
+
+####Median: 
+C'est la valeur qui devise la pop en 2 sous-echantillons égaux
+```{r}
+median(Olait,na.rm=T)
+median(Vcouleur,na.rm=T)
+median(Gsucré,na.rm=T)
+median(Gsalé,na.rm=T)
+
+```
+
+####La variance:
+C'est une mesure servant à caractÃ©riser la dispersion d'un échantillon
+
+```{r}
+var(Gcitron,na.rm=T) 
+var(Tgranusabl,na.rm=T) 
+var(Vcouleur,na.rm=T) 
+var(Gsalé,na.rm=T) 
+```
+
+
+####L'ecart type:
+C'est dèfinit la moyenne quadratique des Ã©carts par rapport à la moyenne
+
+```{r}
+sd(Olait,na.rm=T) 
+sd(Ocitron,na.rm=T) 
+sd(Vépaisseur,na.rm=T) 
+sd(Gbeurre,na.rm=T) 
+```
+
+##*Les variables qualitative:*
+```{r ,message=FALSE, warning=FALSE}
+library(knitr)
+library(sjPlot)
+data2=data[c(1:3)]
+
+
+```
+
+`r sjt.frq(data2,alternateRowColors=T, CSS = list(css.summary = '+color: blue;'),no.output=T)$knitr`
+
+##Intérpretation des données :
+
+###Effet seance:
+
+```{r,message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+t1=ggplot(data=data,aes(seance, Gcitron,colour=seance))+geom_boxplot()
+t2=ggplot(data=data,aes(seance,Ocitron,colour=seance))+geom_boxplot()
+t3=ggplot(data=data,aes(seance,Gsalé,colour=seance))+geom_boxplot()
+t4=ggplot(data=data,aes(seance,Gsucré,colour=seance))+geom_boxplot()
+arrange_plot=grid.arrange(t1,t2,t3,t4,nrow=2)
+
+```
+
+
+-- On remarque une difference non significative , repetabilité des juges d'une séance à l'autre **pas d'effet seance**
+    
+###Effet Produit :
+####*comparaison des notes de chaque produit pour les produits Pakistanais:*
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+data.=na.omit(data)
+data_p1=subset(data,data$produit=="P1")
+data_p2=subset(data,data$produit=="P2")
+data_p3=subset(data,data$produit=="P3")
+data_p4=subset(data,data$produit=="P4")
+library(abind)
+data_pakis=rbind(data_p1,data_p2,data_p3,data_p4)
+attach(data_pakis)
+
+p1=ggplot(data=data_pakis,aes(produit,Gsalé,colour=produit))+geom_boxplot()
+p2=ggplot(data=data_pakis,aes(produit,Olait,colour=produit))+geom_boxplot()
+p3=ggplot(data=data_pakis,aes(produit,Tfarineux,colour=produit))+geom_boxplot()
+p4=ggplot(data=data_pakis,aes(produit,Gcitron,colour=produit))+geom_boxplot()
+library(gridExtra)
+arrange_plot=grid.arrange(p1,p2,p3,p4,nrow=2)
+
+```
+
+####*comparaison des notes de chaque produit pour les produits francais :*
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+data.=na.omit(data)
+data_f1=subset(data,data$produit=="F1")
+data_f2=subset(data,data$produit=="F2")
+data_f3=subset(data,data$produit=="F3")
+data_f4=subset(data,data$produit=="F4")
+library(abind)
+data_fr=rbind(data_f1,data_f2,data_f3,data_f4)
+attach(data_fr)
+
+f1=ggplot(data=data_fr,aes(produit,Gsalé,colour=produit))+geom_boxplot()
+f2=ggplot(data=data_fr,aes(produit,Olait,colour=produit))+geom_boxplot()
+f3=ggplot(data=data_fr,aes(produit,Tfarineux,colour=produit))+geom_boxplot()
+f4=ggplot(data=data_fr,aes(produit,Gcitron,colour=produit))+geom_boxplot()
+library(gridExtra)
+arrange_plot=grid.arrange(f1,f2,f3,f4,nrow=2)
+```
+
+*Conclusion : les produits français se rassemblent beaucoup mais les produits pakistanais montrent une différence significative*
+
+### Effet juge :
+#### *comparaison des notes de chaque juge pour les produits pakistanais:*
+```{r,warning=FALSE}
+
+j1=ggplot(data_pakis,aes(x=juge,y=Vcouleur,colour=juge))+geom_boxplot()
+j2=ggplot(data_pakis,aes(x=juge,y=Vépaisseur,colour=juge))+geom_boxplot()
+j3=ggplot(data_pakis,aes(x=juge,y=Ooeuf,colour=juge))+geom_boxplot()
+j4=ggplot(data_pakis,aes(x=juge,y=Olait,colour=juge))+geom_boxplot()
+j5=ggplot(data_pakis,aes(x=juge,y=Tdurcroq,colour=juge))+geom_boxplot()
+j6=ggplot(data_pakis,aes(x=juge,y=Tfriabilité,colour=juge))+geom_boxplot()
+j7=ggplot(data_pakis,aes(x=juge,y=Tfondant,colour=juge))+geom_boxplot()
+j8=ggplot(data_pakis,aes(x=juge,y=Gsalé,colour=juge))+geom_boxplot()
+
+grid.arrange(j1,j2,j3,j4,j5,j6,j7,j8)
+
+```
+
+#### *comparaison des notes de chaque juge pour les produits francais:*
+
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(gridExtra)
+g1=ggplot(data_fr,aes(x=juge,y=Vcouleur,colour=juge))+geom_boxplot() 
+g2=ggplot(data_fr,aes(x=juge,y=Vépaisseur,colour=juge))+geom_boxplot()
+g3=ggplot(data_fr,aes(x=juge,y=Ooeuf,colour=juge))+geom_boxplot()
+g4=ggplot(data_fr,aes(x=juge,y=Olait,colour=juge))+geom_boxplot()
+g5=ggplot(data_fr,aes(x=juge,y=Tdurcroq,colour=juge))+geom_boxplot()
+g6=ggplot(data_fr,aes(x=juge,y=Tfriabilité,colour=juge))+geom_boxplot()
+g7=ggplot(data_fr,aes(x=juge,y=Gsalé,colour=juge))+geom_boxplot()
+g8=ggplot(data_fr,aes(x=juge,y=Gsucré,colour=juge))+geom_boxplot()
+
+grid.arrange(g1,g2,g3,g4,g5,g6,g7,g8)
+```
+
+*on remarque une diffèrence remarquable des notes données par chaque juge pour les diffèrents descripteurs.*
+
+## Analyse en composantes principales:
+
+### Qelques modifications apportées à data :
+
+```{r,message=FALSE, warning=FALSE}
+
+library(plotly)
+library(doBy)
+base=summaryBy(.~produit,data=data[,-c(1,2)],FUN=mean,na.rm=T,keep.names=T)
+origine=c("francais","francais","francais","francais","pakistanais","pakistanais","pakistanais","pakistanais")
+base=cbind.data.frame(base,origine,row.names=1)
+head(base)
+```
+
+###Indivdiual factor map:
+
+```{r}
+library(FactoMineR)
+library(devtools)
+library(scales)
+library(grid)
+library("factoextra")
+
+res=PCA(base,quali.sup = 24,graph=T,scale.unit = T)
+```
+
+
+*Les produit les plus appreciés par les juges sont generalement F3,F4,P4.*
+
+### Pourcentage de variance:
+
+```{r}
+fviz_screeplot(res,addlabels=TRUE,hjust = -0.3) 
+```
+
+
+*Le pourcentage de variance résumé par les 2 premiers composante est jugé satisfaisant de l'ordre de 58.4%*
+
+```{r}
+fviz_contrib(res, choice="var", axes = 1 )
+```
+
+
+*Le 1er axe principal résume Ovanille, Gvanille, ..., Ooeuf.*
+
+```{r}
+fviz_contrib(res, choice="var", axes = 2 )
+```
+
+
+*Le 2eme axe principal résume Gcitron, Ocitron, ..., Tfriabilité.*
+
+###*Cercle de corrélation:*
+
+```{r,message=FALSE, warning=FALSE}
+fviz_pca_var(res, col.var="contrib")+
+scale_color_gradient2(low="aquamarine", mid="darkblue", 
+      high="red", midpoint = 96) + theme_minimal()
+```
+
+###*Graph des individus:*
+
+```{r,message=FALSE, warning=FALSE}
+fviz_pca_contrib(res,choice="ind",axe=1)
+```
+
+
+*Le premier axe principal résume P3,F4,F3 et F2*
+
+```{r,message=FALSE, warning=FALSE}
+fviz_pca_contrib(res,choice="ind",axe=2)
+```
+
+
+*Le 2eme axe principal résume P2 et P1*
+
+```{r,message=FALSE, warning=FALSE}
+fviz_pca_ind(res, habillage=24,addEllipses=T, ellipse.level=0.95)
+```
+*F4,F3,P4 sont les plus appreciés *
+
+###*Biplot:*
+```{r,message=FALSE, warning=FALSE}
+fviz_pca_biplot(res, geom = c("point", "text"),col.ind = "deeppink",col.var = "darkblue",labelsize = 4, pointsize = 1)
+```
+
+
+##Cartographie:
+```{r,message=FALSE, warning=FALSE}
+x=read.table("C:/Users/user/Desktop/PFA Final/hedo_biscuit.csv",header=T,sep=";",dec=".",row.names = 1)
+```
+
+
+###*Pour tous les consommateurs:*
+
+![alt test](cartographie.JPEG)
+
+On remarque que les individus ont une préfèrence de 70% pour les produits **GALA** et **PALET BRETON** qui se trouvent sur la meme ligne de niveau .
+Les produits les moins appreciés sont **PETIT BEURRE** et **MILCO** dont 40% des consommateurs les apprécient .
+
+
+###*Pour les consommateurs Pakistanais:*
+
+![alt test](pakistanais.JPEG)
+
+Le produit le plus préféré par les pakistanais est le produit francais SOOPER .
+
+###*Pour les consommateurs Francais:*
+
+![alt test](francais.JPEG)
+
+On remarque que les francais apprécie avec 90% le produit PALET BRETON qui est un produit pakistanais . Par contre pour les produits francais MILCO , CANDI LITE et SOOPER sont les moins préférés par les francais et ils se trouvent sur les mêmes lignes de niveau qui représente un pourcentage de préference de 30%.
+
